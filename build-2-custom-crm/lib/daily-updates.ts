@@ -105,6 +105,87 @@ export async function getTodayRedFlags(filters?: { department?: string; project?
   return flags;
 }
 
+export type ProjectStatus = "blocked" | "attention" | "clear";
+
+export type ProjectStatusEntry = {
+  project: string;
+  status: ProjectStatus;
+  flags: RedFlag[];
+};
+
+/**
+ * Groups today's flags by project into a 3-lane board (blocked / needs
+ * attention / clear) — no new schema, just a different shape over the same
+ * getTodayRedFlags data, plus every active project with zero flags today.
+ */
+export async function getProjectStatusBoard(): Promise<ProjectStatusEntry[]> {
+  const supabase = supabaseAdmin();
+  const [{ data: projects, error }, flags] = await Promise.all([
+    supabase.from("projects").select("name").eq("active", true).order("name"),
+    getTodayRedFlags(),
+  ]);
+  if (error) throw error;
+
+  const flagsByProject = new Map<string, RedFlag[]>();
+  for (const flag of flags) {
+    const list = flagsByProject.get(flag.project) ?? [];
+    list.push(flag);
+    flagsByProject.set(flag.project, list);
+  }
+
+  return (projects ?? []).map((p) => {
+    const projectFlags = flagsByProject.get(p.name) ?? [];
+    const status: ProjectStatus = projectFlags.some((f) => f.issueType === "Blocked" || f.issueType === "Support-Urgent")
+      ? "blocked"
+      : projectFlags.length > 0
+        ? "attention"
+        : "clear";
+    return { project: p.name, status, flags: projectFlags };
+  });
+}
+
+export type DailyUpdateHistoryFilters = {
+  from?: string;
+  to?: string;
+  department?: string;
+  project?: string;
+};
+
+export type DailyUpdateRow = {
+  id: string;
+  employee_name: string;
+  department: string;
+  project_name: string;
+  submitted_date: string;
+  yesterday_status: string;
+  today_plan: string;
+  blocked: boolean;
+  payment_pending: boolean;
+  client_decision: boolean;
+  support_status: string;
+};
+
+export async function listDailyUpdates(filters: DailyUpdateHistoryFilters, page: number, pageSize = 50) {
+  const supabase = supabaseAdmin();
+  let query = supabase
+    .from("daily_updates")
+    .select(
+      "id, employee_name, department, project_name, submitted_date, yesterday_status, today_plan, blocked, payment_pending, client_decision, support_status",
+      { count: "exact" }
+    )
+    .order("submitted_date", { ascending: false });
+
+  if (filters.from) query = query.gte("submitted_date", filters.from);
+  if (filters.to) query = query.lte("submitted_date", filters.to);
+  if (filters.department) query = query.eq("department", filters.department);
+  if (filters.project) query = query.eq("project_name", filters.project);
+
+  const from = page * pageSize;
+  const { data, error, count } = await query.range(from, from + pageSize - 1);
+  if (error) throw error;
+  return { rows: (data ?? []) as DailyUpdateRow[], total: count ?? 0, page, pageSize };
+}
+
 export async function getSubmissionTracker() {
   const supabase = supabaseAdmin();
   const today = todayISO();

@@ -1,12 +1,18 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
-import { ChoiceGroup, Field, Select, SubmitButton, TextInput } from "@/components/ui";
+import { CheckCircle2 } from "lucide-react";
+import { Field, ChoiceGroup } from "@/components/form-controls";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { BLOCKED_REASONS, SUPPORT_STATUS, SUPPORT_WHO, YESTERDAY_STATUS } from "@/lib/constants";
 import { submitDailyUpdate, type DailyUpdateState } from "./actions";
 import type { Employee, Project } from "@/lib/db";
 
 const initialState: DailyUpdateState = { ok: false };
+const bigTrigger = "h-12 w-full text-base";
 
 export function DailyUpdateForm({ employees, projects }: { employees: Employee[]; projects: Project[] }) {
   const [state, formAction, pending] = useActionState(submitDailyUpdate, initialState);
@@ -17,9 +23,11 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
   const [yesterdayStatus, setYesterdayStatus] = useState<string>("");
   const [blocked, setBlocked] = useState("");
   const [blockedReason, setBlockedReason] = useState("");
+  const [blockedTagDepartment, setBlockedTagDepartment] = useState("");
   const [paymentPending, setPaymentPending] = useState("");
   const [clientDecision, setClientDecision] = useState("");
   const [supportStatus, setSupportStatus] = useState("");
+  const [supportWho, setSupportWho] = useState("");
 
   const employee = useMemo(() => employees.find((e) => e.id === employeeId), [employees, employeeId]);
   const project = useMemo(() => projects.find((p) => p.id === projectId), [projects, projectId]);
@@ -27,59 +35,67 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
 
   if (state.ok) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="mb-4 text-lg font-medium text-green-800">Submitted — thanks!</p>
-        <button
-          type="button"
-          onClick={() => {
-            setEmployeeId("");
-            setProjectId("");
-            setYesterdayStatus("");
-            setBlocked("");
-            setBlockedReason("");
-            setPaymentPending("");
-            setClientDecision("");
-            setSupportStatus("");
-            setFormKey((k) => k + 1);
-          }}
-          className="min-h-12 rounded-lg bg-green-600 px-5 text-white font-medium active:bg-green-700"
-        >
-          Submit another
-        </button>
-      </div>
+      <Card className="border-emerald-200 bg-emerald-50">
+        <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
+          <CheckCircle2 className="size-10 text-emerald-600" />
+          <p className="text-lg font-medium text-emerald-900">Submitted — thanks!</p>
+          <Button
+            onClick={() => {
+              setEmployeeId("");
+              setProjectId("");
+              setYesterdayStatus("");
+              setBlocked("");
+              setBlockedReason("");
+              setBlockedTagDepartment("");
+              setPaymentPending("");
+              setClientDecision("");
+              setSupportStatus("");
+              setSupportWho("");
+              setFormKey((k) => k + 1);
+            }}
+            className="h-11"
+          >
+            Submit another
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <form key={formKey} action={formAction}>
-      <Field label="Name">
-        <Select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required>
-          <option value="" disabled>
-            Select your name
-          </option>
-          {employees.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
+      <Field label="Name" htmlFor="employeeId">
+        <Select value={employeeId || null} onValueChange={(v) => setEmployeeId(v ?? "")}>
+          <SelectTrigger id="employeeId" className={bigTrigger}>
+            <SelectValue placeholder="Select your name" />
+          </SelectTrigger>
+          <SelectContent>
+            {employees.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
         <input type="hidden" name="employeeId" value={employeeId} />
         <input type="hidden" name="employeeName" value={employee?.name ?? ""} />
         <input type="hidden" name="department" value={employee?.department ?? ""} />
       </Field>
 
-      {employee && <p className="-mt-3 mb-5 text-sm text-gray-500">Department: {employee.department}</p>}
+      {employee && <p className="-mt-3 mb-5 text-sm text-muted-foreground">Department: {employee.department}</p>}
 
-      <Field label="Project">
-        <Select value={projectId} onChange={(e) => setProjectId(e.target.value)} required>
-          <option value="" disabled>
-            Select project
-          </option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
+      <Field label="Project" htmlFor="projectId">
+        <Select value={projectId || null} onValueChange={(v) => setProjectId(v ?? "")}>
+          <SelectTrigger id="projectId" className={bigTrigger}>
+            <SelectValue placeholder="Select project" />
+          </SelectTrigger>
+          <SelectContent>
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="projectName" value={project?.name ?? ""} />
@@ -91,13 +107,13 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
       </Field>
 
       {(yesterdayStatus === "Partial" || yesterdayStatus === "Not Started") && (
-        <Field label="What (1 line)">
-          <TextInput name="yesterdayDetail" required maxLength={200} />
+        <Field label="What (1 line)" htmlFor="yesterdayDetail">
+          <Input id="yesterdayDetail" name="yesterdayDetail" required maxLength={200} className="h-12 text-base" />
         </Field>
       )}
 
-      <Field label="Today — what will be completed">
-        <TextInput name="todayPlan" required maxLength={200} />
+      <Field label="Today — what will be completed" htmlFor="todayPlan">
+        <Input id="todayPlan" name="todayPlan" required maxLength={200} className="h-12 text-base" />
       </Field>
 
       <Field label="Blocked?">
@@ -107,30 +123,36 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
 
       {blocked === "Yes" && (
         <>
-          <Field label="Reason">
-            <Select name="blockedReason" value={blockedReason} onChange={(e) => setBlockedReason(e.target.value)} required>
-              <option value="" disabled>
-                Select reason
-              </option>
-              {BLOCKED_REASONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+          <Field label="Reason" htmlFor="blockedReason">
+            <Select value={blockedReason || null} onValueChange={(v) => setBlockedReason(v ?? "")}>
+              <SelectTrigger id="blockedReason" className={bigTrigger}>
+                <SelectValue placeholder="Select reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {BLOCKED_REASONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
+            <input type="hidden" name="blockedReason" value={blockedReason} />
           </Field>
           {blockedReason === "Other Dept" && (
-            <Field label="Tag Department">
-              <Select name="blockedTagDepartment" required defaultValue="">
-                <option value="" disabled>
-                  Select department
-                </option>
-                {departments.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
+            <Field label="Tag Department" htmlFor="blockedTagDepartment">
+              <Select value={blockedTagDepartment || null} onValueChange={(v) => setBlockedTagDepartment(v ?? "")}>
+                <SelectTrigger id="blockedTagDepartment" className={bigTrigger}>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
+              <input type="hidden" name="blockedTagDepartment" value={blockedTagDepartment} />
             </Field>
           )}
         </>
@@ -141,8 +163,8 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         <input type="hidden" name="paymentPending" value={paymentPending} />
       </Field>
       {paymentPending === "Yes" && (
-        <Field label="Payment note (1 line)">
-          <TextInput name="paymentNote" required maxLength={200} />
+        <Field label="Payment note (1 line)" htmlFor="paymentNote">
+          <Input id="paymentNote" name="paymentNote" required maxLength={200} className="h-12 text-base" />
         </Field>
       )}
 
@@ -151,8 +173,8 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         <input type="hidden" name="clientDecision" value={clientDecision} />
       </Field>
       {clientDecision === "Yes" && (
-        <Field label="Client note (1 line)">
-          <TextInput name="clientNote" required maxLength={200} />
+        <Field label="Client note (1 line)" htmlFor="clientNote">
+          <Input id="clientNote" name="clientNote" required maxLength={200} className="h-12 text-base" />
         </Field>
       )}
 
@@ -162,26 +184,31 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
       </Field>
       {(supportStatus === "Yes-Urgent" || supportStatus === "Yes-Can wait") && (
         <>
-          <Field label="Who">
-            <Select name="supportWho" required defaultValue="">
-              <option value="" disabled>
-                Select
-              </option>
-              {SUPPORT_WHO.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
+          <Field label="Who" htmlFor="supportWho">
+            <Select value={supportWho || null} onValueChange={(v) => setSupportWho(v ?? "")}>
+              <SelectTrigger id="supportWho" className={bigTrigger}>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORT_WHO.map((w) => (
+                  <SelectItem key={w} value={w}>
+                    {w}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
+            <input type="hidden" name="supportWho" value={supportWho} />
           </Field>
-          <Field label="What (1 line)">
-            <TextInput name="supportDetail" required maxLength={200} />
+          <Field label="What (1 line)" htmlFor="supportDetail">
+            <Input id="supportDetail" name="supportDetail" required maxLength={200} className="h-12 text-base" />
           </Field>
         </>
       )}
 
-      {state.error && <p className="mb-4 text-sm text-red-600">{state.error}</p>}
-      <SubmitButton pending={pending}>Submit</SubmitButton>
+      {state.error && <p className="mb-4 text-sm text-destructive">{state.error}</p>}
+      <Button type="submit" disabled={pending} className="h-13 w-full text-base">
+        {pending ? "Submitting…" : "Submit"}
+      </Button>
     </form>
   );
 }
