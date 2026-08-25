@@ -26,11 +26,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Type check
-        run: npx tsc --noEmit
-
       - name: Lint
         run: npm run lint
 
       - name: Build
+        # Runs Next's own TypeScript check — a standalone `tsc --noEmit`
+        # step would fail here since LayoutProps/PageProps are generated
+        # by this same build step, not present on a fresh checkout.
         run: npm run build
