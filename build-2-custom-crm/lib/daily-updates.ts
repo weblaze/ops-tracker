@@ -6,6 +6,7 @@ export type DailyUpdateInput = {
   department: string;
   projectId: string;
   projectName: string;
+  alsoProjectNames: string[];
   yesterdayStatus: "Completed" | "Partial" | "Not Started";
   yesterdayDetail: string | null;
   todayPlan: string;
@@ -29,6 +30,7 @@ export async function insertDailyUpdate(input: DailyUpdateInput) {
     department: input.department,
     project_id: input.projectId,
     project_name: input.projectName,
+    also_project_names: input.alsoProjectNames,
     yesterday_status: input.yesterdayStatus,
     yesterday_detail: input.yesterdayDetail,
     today_plan: input.todayPlan,
@@ -156,6 +158,7 @@ export type DailyUpdateRow = {
   employee_name: string;
   department: string;
   project_name: string;
+  also_project_names: string[];
   submitted_date: string;
   yesterday_status: string;
   today_plan: string;
@@ -170,7 +173,7 @@ export async function listDailyUpdates(filters: DailyUpdateHistoryFilters, page:
   let query = supabase
     .from("daily_updates")
     .select(
-      "id, employee_name, department, project_name, submitted_date, yesterday_status, today_plan, blocked, payment_pending, client_decision, support_status",
+      "id, employee_name, department, project_name, also_project_names, submitted_date, yesterday_status, today_plan, blocked, payment_pending, client_decision, support_status",
       { count: "exact" }
     )
     .order("submitted_date", { ascending: false });
