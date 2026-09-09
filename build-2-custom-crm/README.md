@@ -77,6 +77,26 @@ npx supabase db push
 (Already linked to the live project via `supabase link` — no need to
 re-link unless you're on a fresh machine.)
 
+## Comparison variants (not on `main`)
+
+Two branches carry alternate versions of the entry-form experience for
+a side-by-side trial — see the root [README](../README.md) for the full
+4-way comparison (these two plus two Google Forms/Sheets variants):
+
+- `variant/web-updated-language` — same structure as `main`, clearer
+  Daily Update wording + real roster.
+- `variant/web-4-departments` — replaces `/daily-update` with 4 routes
+  (`/execution`, `/design`, `/purchase`, `/coordination`), each dropping
+  the Department picker and worded around that department's real work.
+
+Both get their own Vercel preview URL automatically on push (see their
+PRs on GitHub for the current link — preview URLs are per-deployment,
+not fixed). Vercel's SSO deployment protection is **off** for this
+project specifically so those preview links work without a Vercel
+account — re-enable it (`vercel project protection enable ops-tracker
+--sso`) once the comparison round is done and these branches are merged
+or dropped.
+
 ## Notes on choices made
 
 - **RLS is on, no policies.** Only the service-role key (server-only, used
