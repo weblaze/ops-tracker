@@ -9,6 +9,7 @@ import {
   updateProjectAction,
 } from "./actions";
 import { EditableRow } from "./editable-row";
+import { DEPARTMENT_PROFILES } from "@/lib/departments";
 import { AddEmployeeForm, AddProjectForm } from "./add-form";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ export default async function AdminPage() {
                 active={e.active}
                 name={e.name}
                 department={e.department}
+                departmentOptions={DEPARTMENT_PROFILES.map((p) => p.name)}
                 onUpdate={updateEmployeeAction}
                 onToggleActive={toggleEmployeeActiveAction}
               />

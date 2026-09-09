@@ -7,14 +7,27 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BLOCKED_REASONS, SUPPORT_STATUS, SUPPORT_WHO, YESTERDAY_STATUS } from "@/lib/constants";
+import { BLOCKED_REASONS, SUPPORT_STATUS, YESTERDAY_STATUS } from "@/lib/constants";
+import type { DepartmentProfile } from "@/lib/departments";
 import { submitDailyUpdate, type DailyUpdateState } from "./actions";
 import type { Employee, Project } from "@/lib/db";
 
 const initialState: DailyUpdateState = { ok: false };
 const bigTrigger = "h-12 w-full text-base";
 
-export function DailyUpdateForm({ employees, projects }: { employees: Employee[]; projects: Project[] }) {
+export function DepartmentUpdateForm({
+  profile,
+  deptEmployees,
+  allEmployees,
+  otherDepartments,
+  projects,
+}: {
+  profile: DepartmentProfile;
+  deptEmployees: Employee[];
+  allEmployees: Employee[];
+  otherDepartments: string[];
+  projects: Project[];
+}) {
   const [state, formAction, pending] = useActionState(submitDailyUpdate, initialState);
   const [formKey, setFormKey] = useState(0);
 
@@ -30,10 +43,13 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
   const [supportStatus, setSupportStatus] = useState("");
   const [supportWho, setSupportWho] = useState("");
 
-  const employee = useMemo(() => employees.find((e) => e.id === employeeId), [employees, employeeId]);
+  const employee = useMemo(() => deptEmployees.find((e) => e.id === employeeId), [deptEmployees, employeeId]);
   const project = useMemo(() => projects.find((p) => p.id === projectId), [projects, projectId]);
-  const departments = useMemo(() => Array.from(new Set(employees.map((e) => e.department))).sort(), [employees]);
   const otherProjectNames = useMemo(() => projects.filter((p) => p.id !== projectId).map((p) => p.name), [projects, projectId]);
+  const supportWhoOptions = useMemo(
+    () => allEmployees.filter((e) => e.id !== employeeId).map((e) => e.name).concat(["Client", "Vendor"]),
+    [allEmployees, employeeId]
+  );
 
   if (state.ok) {
     return (
@@ -73,7 +89,7 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
             <SelectValue placeholder="Select your name" />
           </SelectTrigger>
           <SelectContent>
-            {employees.map((e) => (
+            {deptEmployees.map((e) => (
               <SelectItem key={e.id} value={e.id}>
                 {e.name}
               </SelectItem>
@@ -82,10 +98,8 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         </Select>
         <input type="hidden" name="employeeId" value={employeeId} />
         <input type="hidden" name="employeeName" value={employee?.name ?? ""} />
-        <input type="hidden" name="department" value={employee?.department ?? ""} />
+        <input type="hidden" name="department" value={profile.name} />
       </Field>
-
-      {employee && <p className="-mt-3 mb-5 text-sm text-muted-foreground">Department: {employee.department}</p>}
 
       <Field label="Which project is this mainly about today?" htmlFor="projectId">
         <Select value={projectId || null} onValueChange={(v) => setProjectId(v ?? "")}>
@@ -124,11 +138,11 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         </Field>
       )}
 
-      <Field label="What will you get done today?" htmlFor="todayPlan" hint="e.g. install AHU filter, submit drawing to client">
+      <Field label="What will you get done today?" htmlFor="todayPlan" hint={profile.todayHint}>
         <Input id="todayPlan" name="todayPlan" required maxLength={200} className="h-12 text-base" />
       </Field>
 
-      <Field label="Is anything stopping you from finishing your work?" hint="e.g. missing material, no drawing approval yet">
+      <Field label="Is anything stopping you from finishing your work?" hint={profile.blockedHint}>
         <ChoiceGroup options={["Yes", "No"]} value={blocked} onChange={setBlocked} />
         <input type="hidden" name="blocked" value={blocked} />
       </Field>
@@ -157,7 +171,7 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((d) => (
+                  {otherDepartments.map((d) => (
                     <SelectItem key={d} value={d}>
                       {d}
                     </SelectItem>
@@ -170,7 +184,7 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         </>
       )}
 
-      <Field label="Is a pending payment slowing this down?" hint="e.g. vendor won't deliver until paid">
+      <Field label={profile.paymentQuestion} hint={profile.paymentHint}>
         <ChoiceGroup options={["Yes", "No"]} value={paymentPending} onChange={setPaymentPending} />
         <input type="hidden" name="paymentPending" value={paymentPending} />
       </Field>
@@ -180,7 +194,7 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
         </Field>
       )}
 
-      <Field label="Are you waiting on the client to decide something?" hint="e.g. tile color, layout approval">
+      <Field label={profile.clientQuestion} hint={profile.clientHint}>
         <ChoiceGroup options={["Yes", "No"]} value={clientDecision} onChange={setClientDecision} />
         <input type="hidden" name="clientDecision" value={clientDecision} />
       </Field>
@@ -202,7 +216,7 @@ export function DailyUpdateForm({ employees, projects }: { employees: Employee[]
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {SUPPORT_WHO.map((w) => (
+                {supportWhoOptions.map((w) => (
                   <SelectItem key={w} value={w}>
                     {w}
                   </SelectItem>

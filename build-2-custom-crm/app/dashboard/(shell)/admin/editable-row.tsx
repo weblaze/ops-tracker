@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,11 +23,12 @@ type Props = {
   active: boolean;
   name: string;
   department?: string;
+  departmentOptions?: string[];
   onUpdate: (id: string, name: string, department?: string) => Promise<void>;
   onToggleActive: (id: string, active: boolean) => Promise<void>;
 };
 
-export function EditableRow({ id, active, name, department, onUpdate, onToggleActive }: Props) {
+export function EditableRow({ id, active, name, department, departmentOptions, onUpdate, onToggleActive }: Props) {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(name);
   const [deptValue, setDeptValue] = useState(department ?? "");
@@ -59,7 +61,21 @@ export function EditableRow({ id, active, name, department, onUpdate, onToggleAc
     return (
       <div className="flex flex-wrap items-center gap-2 border-b py-2 last:border-0">
         <Input value={nameValue} onChange={(e) => setNameValue(e.target.value)} className="h-8 w-40" />
-        {department !== undefined && (
+        {department !== undefined && departmentOptions && (
+          <Select value={deptValue} onValueChange={(v) => setDeptValue(v ?? deptValue)}>
+            <SelectTrigger className="h-8 w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {departmentOptions.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {department !== undefined && !departmentOptions && (
           <Input value={deptValue} onChange={(e) => setDeptValue(e.target.value)} className="h-8 w-40" />
         )}
         <Button size="sm" onClick={save} disabled={isPending}>
