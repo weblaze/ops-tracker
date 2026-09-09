@@ -17,7 +17,7 @@ var YESTERDAY_STATUS = ['Completed', 'Partial', 'Not Started'];
 var YES_NO = ['Yes', 'No'];
 var BLOCKED_REASONS = ['Material', 'Drawing', 'Client Decision', 'Payment', 'Labour', 'Site Not Ready', 'Other Dept', 'Other'];
 var SUPPORT_STATUS = ['No', 'Yes-Urgent', 'Yes-Can wait'];
-var SUPPORT_WHO = ['Prashant', 'Rajeev', 'Design', 'Purchase', 'Site', 'Accounts', 'Client', 'Vendor'];
+var SUPPORT_WHO = ['Amit', 'Anil', 'Rahul', 'Subrat', 'Client', 'Vendor'];
 
 // Not specified exactly in the brief — sensible defaults, easy to edit here.
 var LEAD_SOURCES = ['Referral', 'Website', 'Cold Call', 'Exhibition', 'Social Media', 'Walk-in', 'Other'];

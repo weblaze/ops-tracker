@@ -5,12 +5,13 @@
  *
  * DailyUpdate_Responses columns (1-indexed, set by form item order — see
  * buildDailyUpdateForm_ in Setup.gs):
- *   1 Timestamp        7  Blocked            13 Client Note
- *   2 Name — Dept      8  Blocked Reason     14 Support Status
- *   3 Project           9  Tag Department     15 Support Who
- *   4 Yesterday Status 10 Payment Pending    16 Support Detail
- *   5 Yesterday Detail 11 Payment Note       17 Date (appended here)
- *   6 Today Plan       12 Client Decision
+ *   1 Timestamp         8  Blocked            14 Client Note
+ *   2 Name — Dept       9  Blocked Reason     15 Support Status
+ *   3 Project           10 Tag Department     16 Support Who
+ *   4 Also Worked On    11 Payment Pending    17 Support Detail
+ *   5 Yesterday Status  12 Payment Note       18 Date (appended here)
+ *   6 Yesterday Detail  13 Client Decision
+ *   7 Today Plan
  *
  * LeadGen_Responses columns:
  *   1 Timestamp  5 Contact Person 9  Priority     13 Next Action
@@ -38,7 +39,7 @@ function handleDailyUpdateSubmit_(e) {
   var v = e.values;
   var today = dateOnly_(v[0]);
 
-  sheet.getRange(row, 17).setValue(today);
+  sheet.getRange(row, 18).setValue(today);
 
   var parts = String(v[1]).split(' — ');
   var person = parts[0] || '';
@@ -46,19 +47,19 @@ function handleDailyUpdateSubmit_(e) {
   var project = v[2];
 
   var flags = [];
-  if (v[6] === 'Yes') {
-    var reasonDetail = 'Reason: ' + v[7] + (v[7] === 'Other Dept' ? ' (' + v[8] + ')' : '');
-    flags.push([today, project, person, dept, 'Blocked', reasonDetail, v[7] === 'Other Dept' ? v[8] : '']);
+  if (v[7] === 'Yes') {
+    var reasonDetail = 'Reason: ' + v[8] + (v[8] === 'Other Dept' ? ' (' + v[9] + ')' : '');
+    flags.push([today, project, person, dept, 'Blocked', reasonDetail, v[8] === 'Other Dept' ? v[9] : '']);
   }
-  if (v[9] === 'Yes') {
-    flags.push([today, project, person, dept, 'Payment', v[10], '']);
+  if (v[10] === 'Yes') {
+    flags.push([today, project, person, dept, 'Payment', v[11], '']);
   }
-  if (v[11] === 'Yes') {
-    flags.push([today, project, person, dept, 'Client Decision', v[12], '']);
+  if (v[12] === 'Yes') {
+    flags.push([today, project, person, dept, 'Client Decision', v[13], '']);
   }
-  if (v[13] === 'Yes-Urgent' || v[13] === 'Yes-Can wait') {
-    var issueType = v[13] === 'Yes-Urgent' ? 'Support-Urgent' : 'Support-CanWait';
-    flags.push([today, project, person, dept, issueType, v[15], v[14]]);
+  if (v[14] === 'Yes-Urgent' || v[14] === 'Yes-Can wait') {
+    var issueType = v[14] === 'Yes-Urgent' ? 'Support-Urgent' : 'Support-CanWait';
+    flags.push([today, project, person, dept, issueType, v[16], v[15]]);
   }
 
   if (flags.length) {

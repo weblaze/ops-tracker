@@ -20,6 +20,7 @@ function setupAll() {
   if (defaultSheet) ss.deleteSheet(defaultSheet);
 
   installTriggers_(ss.getId());
+  syncDropdowns();
 
   Logger.log('Spreadsheet: ' + ss.getUrl());
   Logger.log('Daily Update form (share this link): ' + dailyForm.getPublishedUrl());
@@ -30,11 +31,10 @@ function seedMasterTabs_(ss) {
   var emp = ss.insertSheet(SHEET_EMPLOYEES);
   emp.getRange(1, 1, 1, 3).setValues([['Name', 'Department', 'Name — Department (auto, do not edit)']]);
   var placeholderEmployees = [
-    ['Employee 1', 'Site'],
-    ['Employee 2', 'Design'],
-    ['Employee 3', 'Purchase'],
-    ['Employee 4', 'Accounts'],
-    ['Employee 5', 'Site']
+    ['Amit', 'Coordination'],
+    ['Anil', 'Purchase'],
+    ['Rahul', 'Execution'],
+    ['Subrat', 'Design']
   ];
   emp.getRange(2, 1, placeholderEmployees.length, 2).setValues(placeholderEmployees);
   emp.getRange(2, 3, 200).setFormula('=ARRAYFORMULA(IF(A2:A200="","",A2:A200&" — "&B2:B200))');
@@ -66,23 +66,30 @@ function buildDailyUpdateForm_(ss) {
   form.setDescription('Daily status — takes under 90 seconds. Pick your name and tap through.');
 
   // --- Page 1: Identity ---
-  var nameDeptItem = form.addListItem().setTitle('Name — Department').setRequired(true);
+  var nameDeptItem = form.addListItem().setTitle('Who\'s filling this out?').setRequired(true);
   props.setProperty('ITEM_NAMEDEPT_ID', String(nameDeptItem.getId()));
 
-  var projectItem = form.addListItem().setTitle('Project').setRequired(true);
+  var projectItem = form.addListItem().setTitle('Which project is this mainly about today?').setRequired(true);
   props.setProperty('ITEM_PROJECT_ID', String(projectItem.getId()));
+
+  var alsoProjectsItem = form.addCheckboxItem()
+    .setTitle('Any other projects you also touched today?')
+    .setHelpText('Optional — just a quick tag, no extra detail needed.');
+  props.setProperty('ITEM_ALSOPROJECTS_ID', String(alsoProjectsItem.getId()));
 
   // --- Page 2: Yesterday ---
   form.addPageBreakItem().setTitle('Yesterday');
-  var yesterdayStatus = form.addMultipleChoiceItem().setTitle('Yesterday — Status').setRequired(true);
+  var yesterdayStatus = form.addMultipleChoiceItem().setTitle('How did yesterday\'s work go?').setRequired(true);
 
   // --- Page 3: Yesterday detail (only if Partial / Not Started) ---
   form.addPageBreakItem().setTitle('Yesterday — What');
-  form.addParagraphTextItem().setTitle('What (1 line)').setRequired(true);
+  form.addParagraphTextItem().setTitle('What\'s left from yesterday?')
+    .setHelpText('e.g. wiring not finished, waiting on materials').setRequired(true);
 
   // --- Page 4: Today ---
   var pbTodayReal = form.addPageBreakItem().setTitle('Today');
-  form.addParagraphTextItem().setTitle('Today — what will be completed').setRequired(true);
+  form.addParagraphTextItem().setTitle('What will you get done today?')
+    .setHelpText('e.g. install AHU filter, submit drawing to client').setRequired(true);
 
   yesterdayStatus.setChoices([
     yesterdayStatus.createChoice('Completed', pbTodayReal),
@@ -92,20 +99,24 @@ function buildDailyUpdateForm_(ss) {
 
   // --- Page 5: Blocked ---
   form.addPageBreakItem().setTitle('Blocked');
-  var blocked = form.addMultipleChoiceItem().setTitle('Blocked?').setRequired(true);
+  var blocked = form.addMultipleChoiceItem()
+    .setTitle('Is anything stopping you from finishing your work?')
+    .setHelpText('e.g. missing material, no drawing approval yet').setRequired(true);
 
   // --- Page 6: Reason (only if Blocked = Yes) ---
   form.addPageBreakItem().setTitle('Blocked — Reason');
-  var reason = form.addListItem().setTitle('Reason').setChoiceValues(BLOCKED_REASONS).setRequired(true);
+  var reason = form.addListItem().setTitle('What\'s the reason?').setChoiceValues(BLOCKED_REASONS).setRequired(true);
 
   // --- Page 7: Tag Department (only if Reason = Other Dept) ---
   form.addPageBreakItem().setTitle('Tag Department');
-  var tagDept = form.addListItem().setTitle('Tag Department').setRequired(true);
+  var tagDept = form.addListItem().setTitle('Which team is holding this up?').setRequired(true);
   props.setProperty('ITEM_TAGDEPT_ID', String(tagDept.getId()));
 
   // --- Page 8: Payment ---
   var pbPayment = form.addPageBreakItem().setTitle('Payment');
-  var payment = form.addMultipleChoiceItem().setTitle('Payment pending and affecting this work?').setRequired(true);
+  var payment = form.addMultipleChoiceItem()
+    .setTitle('Is a pending payment slowing this down?')
+    .setHelpText('e.g. vendor won\'t deliver until paid').setRequired(true);
 
   blocked.setChoices([
     blocked.createChoice('Yes', FormApp.PageNavigationType.CONTINUE),
@@ -117,11 +128,14 @@ function buildDailyUpdateForm_(ss) {
 
   // --- Page 9: Payment note (only if Payment = Yes) ---
   form.addPageBreakItem().setTitle('Payment — Note');
-  form.addParagraphTextItem().setTitle('Payment note (1 line)').setRequired(true);
+  form.addParagraphTextItem().setTitle('Quick note')
+    .setHelpText('e.g. vendor invoice unpaid, client hasn\'t released advance').setRequired(true);
 
   // --- Page 10: Client ---
   var pbClient = form.addPageBreakItem().setTitle('Client');
-  var client = form.addMultipleChoiceItem().setTitle('Client decision required?').setRequired(true);
+  var client = form.addMultipleChoiceItem()
+    .setTitle('Are you waiting on the client to decide something?')
+    .setHelpText('e.g. tile color, layout approval').setRequired(true);
 
   payment.setChoices([
     payment.createChoice('Yes', FormApp.PageNavigationType.CONTINUE),
@@ -130,11 +144,12 @@ function buildDailyUpdateForm_(ss) {
 
   // --- Page 11: Client note (only if Client = Yes) ---
   form.addPageBreakItem().setTitle('Client — Note');
-  form.addParagraphTextItem().setTitle('Client note (1 line)').setRequired(true);
+  form.addParagraphTextItem().setTitle('Quick note')
+    .setHelpText('e.g. waiting on client to confirm design').setRequired(true);
 
   // --- Page 12: Support ---
   var pbSupport = form.addPageBreakItem().setTitle('Support');
-  var support = form.addMultipleChoiceItem().setTitle('Support needed?').setRequired(true);
+  var support = form.addMultipleChoiceItem().setTitle('Do you need help from someone else today?').setRequired(true);
 
   client.setChoices([
     client.createChoice('Yes', FormApp.PageNavigationType.CONTINUE),
@@ -143,8 +158,8 @@ function buildDailyUpdateForm_(ss) {
 
   // --- Page 13: Support detail (only if Support != No) ---
   form.addPageBreakItem().setTitle('Support — Detail');
-  var supportWho = form.addListItem().setTitle('Who').setChoiceValues(SUPPORT_WHO).setRequired(true);
-  form.addParagraphTextItem().setTitle('What (1 line)').setRequired(true);
+  var supportWho = form.addListItem().setTitle('Who can help with this?').setChoiceValues(SUPPORT_WHO).setRequired(true);
+  form.addParagraphTextItem().setTitle('What do you need?').setHelpText('e.g. Rahul on site by 2pm').setRequired(true);
 
   support.setChoices([
     support.createChoice('No', FormApp.PageNavigationType.SUBMIT),

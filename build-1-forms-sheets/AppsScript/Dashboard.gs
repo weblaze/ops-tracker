@@ -24,13 +24,13 @@ function buildDashboard_(ss) {
   d.getRange('A32').setValue('SUBMISSION TRACKER').setFontWeight('bold');
   d.getRange('A33').setFormula(
     '="Submitted: "&(COUNTA(' + SHEET_EMPLOYEES + '!A2:A)-IFERROR(COUNTA(UNIQUE(FILTER(' +
-    SHEET_DAILY_RESPONSES + '!B2:B,' + SHEET_DAILY_RESPONSES + '!Q2:Q=TODAY()))),0))&' +
+    SHEET_DAILY_RESPONSES + '!B2:B,' + SHEET_DAILY_RESPONSES + '!R2:R=TODAY()))),0))&' +
     '" of "&COUNTA(' + SHEET_EMPLOYEES + '!A2:A)'
   );
   d.getRange('A34').setValue('Missing today:');
   d.getRange('A35').setFormula(
     '=IFERROR(FILTER(' + SHEET_EMPLOYEES + '!A2:A,ISNA(MATCH(' + SHEET_EMPLOYEES + '!C2:C,' +
-    'IFERROR(FILTER(' + SHEET_DAILY_RESPONSES + '!B2:B,' + SHEET_DAILY_RESPONSES + '!Q2:Q=TODAY()),{"—NONE—"}),0))),' +
+    'IFERROR(FILTER(' + SHEET_DAILY_RESPONSES + '!B2:B,' + SHEET_DAILY_RESPONSES + '!R2:R=TODAY()),{"—NONE—"}),0))),' +
     '"Everyone has submitted")'
   );
 

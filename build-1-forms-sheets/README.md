@@ -4,6 +4,17 @@ Two Google Forms (Daily Update, Lead Generation), one Google Sheet holding
 both response tabs plus `Employees`, `Projects`, `Flags`, and `Dashboard`
 tabs, wired together with Apps Script.
 
+## v2 — clearer wording, real roster
+
+Every Daily Update prompt is now a plain question ("Is anything stopping
+you from finishing your work?" instead of "Blocked?"), with a short
+example under the ones that needed one. There's also a new optional
+"Any other projects you also touched today?" checkbox for people working
+across multiple active projects at once — it's just a lightweight tag, not
+a second detailed submission. The roster/departments are now the real
+team (Amit/Coordination, Anil/Purchase, Rahul/Execution, Subrat/Design)
+instead of placeholders, and the Support "Who" list uses their real names.
+
 ## What this does
 
 - **Daily Update form** — 6-part structure with branching (skip pages you
@@ -47,10 +58,11 @@ reactive auto-fill.
 6. Open **Execution log** (View → Logs, or Ctrl+Enter) to get the
    Spreadsheet URL and the two published form links. Share the form links
    with employees / office staff.
-7. Open the Spreadsheet → replace the placeholder rows in `Employees` and
-   `Projects` with your real names/departments/projects. The form
-   dropdowns update within a few seconds (onEdit trigger), or instantly via
-   **Ops Tools → Sync Dropdowns Now**.
+7. Open the Spreadsheet → the `Employees` tab is already seeded with the
+   real team; add anyone missing or fix a department there, and add your
+   real `Projects`. The dropdowns sync automatically on setup and again on
+   any edit to those tabs, or instantly via **Ops Tools → Sync Dropdowns
+   Now**.
 
 Re-running `setupAll()` later creates a **second, separate** spreadsheet
 and pair of forms — it's meant to run once. If you need to rebuild, delete
@@ -79,6 +91,6 @@ me the cell reference and I'll fix the formula.
 ## Phase 2 (flagged, not built)
 
 `Triggers.gs` has a stub `sendDailySummaryEmail()` function. To turn it
-into an actual daily email to Prashant/Rajeev later: write the email body,
-then add a time-driven trigger for it (Apps Script editor → Triggers →
-Add Trigger → choose the function → Time-driven).
+into an actual daily email later: write the email body, then add a
+time-driven trigger for it (Apps Script editor → Triggers → Add Trigger →
+choose the function → Time-driven).

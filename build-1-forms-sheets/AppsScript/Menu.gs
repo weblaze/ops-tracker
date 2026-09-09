@@ -38,6 +38,7 @@ function syncDropdowns() {
 
   dailyForm.getItemById(Number(props.getProperty('ITEM_NAMEDEPT_ID'))).asListItem().setChoiceValues(nameDept);
   dailyForm.getItemById(Number(props.getProperty('ITEM_PROJECT_ID'))).asListItem().setChoiceValues(activeProjects);
+  dailyForm.getItemById(Number(props.getProperty('ITEM_ALSOPROJECTS_ID'))).asCheckboxItem().setChoiceValues(activeProjects);
   dailyForm.getItemById(Number(props.getProperty('ITEM_TAGDEPT_ID'))).asListItem().setChoiceValues(depts);
 
   leadForm.getItemById(Number(props.getProperty('ITEM_CAPTUREDBY_ID'))).asListItem().setChoiceValues(names);
