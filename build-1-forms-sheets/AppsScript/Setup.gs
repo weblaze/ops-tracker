@@ -61,6 +61,7 @@ function buildDailyUpdateForm_(ss) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create('Daily Update');
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  renameNewestSheet_(ss, SHEET_DAILY_RESPONSES);
   form.setCollectEmail(false);
   form.setLimitOneResponsePerUser(false);
   form.setDescription('Daily status — takes under 90 seconds. Pick your name and tap through.');
@@ -175,6 +176,7 @@ function buildLeadGenForm_(ss) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create('Lead Generation');
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  renameNewestSheet_(ss, SHEET_LEAD_RESPONSES);
   form.setCollectEmail(false);
   form.setDescription('Office staff only — new lead capture.');
 
