@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClipboardList, UserPlus, LayoutDashboard } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { DEPARTMENT_PROFILES } from "@/lib/departments";
 
 export default function Home() {
   return (
@@ -10,13 +11,17 @@ export default function Home() {
           <ClipboardList className="size-6" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Ops Tracker</h1>
+        <p className="text-sm text-muted-foreground">Daily Update — pick your department</p>
       </div>
 
-      <Link href="/daily-update" className={buttonVariants({ className: "h-14 text-base" })}>
-        <ClipboardList className="size-5" />
-        Daily Update
-      </Link>
-      <Link href="/lead-gen" className={buttonVariants({ variant: "secondary", className: "h-14 text-base" })}>
+      {DEPARTMENT_PROFILES.map((p) => (
+        <Link key={p.slug} href={`/${p.slug}`} className={buttonVariants({ className: "h-14 text-base" })}>
+          <ClipboardList className="size-5" />
+          {p.label}
+        </Link>
+      ))}
+
+      <Link href="/lead-gen" className={buttonVariants({ variant: "secondary", className: "mt-2 h-14 text-base" })}>
         <UserPlus className="size-5" />
         Lead Generation
       </Link>

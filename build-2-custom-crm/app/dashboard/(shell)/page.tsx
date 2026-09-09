@@ -63,6 +63,9 @@ export default async function OverviewPage() {
           <CardTitle>Today&rsquo;s Red Flags</CardTitle>
           <p className="text-sm text-muted-foreground">Anyone not listed here is clear today.</p>
           <CardAction>
+            {/* Plain <a>, not <Link> — this is a CSV download, and Link's client-side
+                routing would try to fetch/render it as a page instead of downloading it. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/dashboard/export" className={buttonVariants({ variant: "outline", size: "sm" })}>
               Export CSV
             </a>

@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DEPARTMENT_PROFILES } from "@/lib/departments";
 
 export function AddEmployeeForm({ onAdd }: { onAdd: (name: string, department: string) => Promise<void> }) {
   const [name, setName] = useState("");
@@ -12,10 +14,10 @@ export function AddEmployeeForm({ onAdd }: { onAdd: (name: string, department: s
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !department.trim()) return;
+    if (!name.trim() || !department) return;
     startTransition(async () => {
       try {
-        await onAdd(name.trim(), department.trim());
+        await onAdd(name.trim(), department);
         toast.success("Employee added");
         setName("");
         setDepartment("");
@@ -28,7 +30,18 @@ export function AddEmployeeForm({ onAdd }: { onAdd: (name: string, department: s
   return (
     <form onSubmit={submit} className="flex flex-wrap gap-2">
       <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="h-9 max-w-48" />
-      <Input placeholder="Department" value={department} onChange={(e) => setDepartment(e.target.value)} className="h-9 max-w-48" />
+      <Select value={department || null} onValueChange={(v) => setDepartment(v ?? "")}>
+        <SelectTrigger className="h-9 w-40">
+          <SelectValue placeholder="Department" />
+        </SelectTrigger>
+        <SelectContent>
+          {DEPARTMENT_PROFILES.map((p) => (
+            <SelectItem key={p.slug} value={p.name}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Button type="submit" size="sm" disabled={isPending}>
         Add
       </Button>
