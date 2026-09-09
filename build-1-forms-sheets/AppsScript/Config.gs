@@ -41,3 +41,13 @@ function pad3_(n) {
   var s = String(n);
   return s.length < 3 ? ('000' + s).slice(-3) : s;
 }
+
+/**
+ * form.setDestination() auto-creates a new response sheet, but its default
+ * name isn't something we can rely on — this renames whichever sheet just
+ * appeared so the sheet-name constants above are guaranteed to match.
+ */
+function renameNewestSheet_(ss, name) {
+  var sheets = ss.getSheets();
+  sheets[sheets.length - 1].setName(name);
+}
