@@ -66,8 +66,9 @@ function seedMasterTabs_(ss) {
 function buildDepartmentForm_(ss, profile) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create(profile.formTitle);
+  var beforeNames = ss.getSheets().map(function (s) { return s.getName(); });
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
-  renameNewestSheet_(ss, profile.sheetName);
+  renameNewResponseSheet_(ss, beforeNames, profile.sheetName);
   form.setCollectEmail(false);
   form.setLimitOneResponsePerUser(false);
   form.setDescription('Daily status for ' + profile.name + ' — takes under 90 seconds.');
@@ -184,8 +185,9 @@ function buildDepartmentForm_(ss, profile) {
 function buildLeadGenForm_(ss) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create('Lead Generation');
+  var beforeNames = ss.getSheets().map(function (s) { return s.getName(); });
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
-  renameNewestSheet_(ss, SHEET_LEAD_RESPONSES);
+  renameNewResponseSheet_(ss, beforeNames, SHEET_LEAD_RESPONSES);
   form.setCollectEmail(false);
   form.setDescription('Office staff only — new lead capture.');
 

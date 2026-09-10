@@ -103,9 +103,24 @@ function pad3_(n) {
   return s.length < 3 ? ('000' + s).slice(-3) : s;
 }
 
-function renameNewestSheet_(ss, name) {
-  var sheets = ss.getSheets();
-  sheets[sheets.length - 1].setName(name);
+/**
+ * Call ss.getSheets().map(function(s){return s.getName();}) right BEFORE
+ * form.setDestination() and pass the result here as `beforeNames` — this
+ * finds whichever sheet is new by comparing names, rather than assuming
+ * it's the last one in the array (that assumption is what broke setup:
+ * there can be a short lag between Forms creating the sheet and Sheets
+ * reflecting it, so "last sheet" sometimes pointed at Projects instead).
+ */
+function renameNewResponseSheet_(ss, beforeNames, name) {
+  Utilities.sleep(500);
+  var fresh = SpreadsheetApp.openById(ss.getId());
+  var created = fresh.getSheets().filter(function (s) {
+    return beforeNames.indexOf(s.getName()) === -1;
+  });
+  if (created.length === 0) {
+    throw new Error('Could not find the new response sheet for "' + name + '" after linking the form — try running setupAll() again.');
+  }
+  created[created.length - 1].setName(name);
 }
 
 function supportWhoFor_(deptProfile) {
