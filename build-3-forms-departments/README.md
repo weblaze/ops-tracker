@@ -35,16 +35,27 @@ dashboard still shows everyone in one place.
 5. Open the **Execution log** (Ctrl+Enter) for the Spreadsheet URL and
    the 5 form links (4 department forms + Lead Generation). Share each
    department's form only with that department's people.
+6. **Wait about a minute**, then check **View → Executions** for a
+   `finishSetup` entry that ran after `setupAll` and finished without an
+   error. With 5 forms here, Google Forms' response-sheet creation delay
+   (variable, not reliably visible within `setupAll`'s own run) needs a
+   bit more time than Build 1's 2 forms — `finishSetup` retries itself
+   automatically every minute (up to 6 attempts) until every sheet is
+   found and renamed. A response submitted before it finishes still
+   saves, but the Dashboard/Flags logic won't process it. Run
+   `finishSetup` manually from the function dropdown any time if you
+   don't want to wait or want to retry sooner.
 
 Re-running `setupAll()` creates a second, separate set of everything.
 
 ## Verify it end-to-end
 
-Same idea as Build 1's checklist, run once per department form: submit
-one response tripping every flag (Blocked → Other Dept → tag a
-department; Payment = Yes; Client = Yes; Support = Yes-Urgent), confirm
-4 rows land in `Flags` and show up red/yellow on the Dashboard. Then
-submit one Lead and confirm it shows in the pipeline snapshot.
+Make sure `finishSetup` has completed (step 6 above) first. Same idea as
+Build 1's checklist, run once per department form: submit one response
+tripping every flag (Blocked → Other Dept → tag a department; Payment =
+Yes; Client = Yes; Support = Yes-Urgent), confirm 4 rows land in `Flags`
+and show up red/yellow on the Dashboard. Then submit one Lead and confirm
+it shows in the pipeline snapshot.
 
 I couldn't execute this against live Sheets from here — if a Dashboard
 formula shows `#N/A`/`#ERROR!`, tell me the cell and I'll fix it.

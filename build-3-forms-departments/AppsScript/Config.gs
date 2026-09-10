@@ -103,33 +103,6 @@ function pad3_(n) {
   return s.length < 3 ? ('000' + s).slice(-3) : s;
 }
 
-/**
- * Call ss.getSheets().map(function(s){return s.getName();}) right BEFORE
- * form.setDestination() and pass the result here as `beforeNames` — this
- * finds whichever sheet is new by comparing names, rather than assuming
- * it's the last one in the array (that assumption is what broke setup
- * originally: there's a lag between Forms creating the sheet and Sheets
- * reflecting it, so "last sheet" sometimes pointed at Projects instead).
- *
- * The lag is variable — a single fixed wait wasn't reliably long enough —
- * so this polls for up to ~20 seconds rather than checking once.
- */
-function renameNewResponseSheet_(ss, beforeNames, name) {
-  var maxAttempts = 20;
-  for (var i = 0; i < maxAttempts; i++) {
-    Utilities.sleep(1000);
-    var fresh = SpreadsheetApp.openById(ss.getId());
-    var created = fresh.getSheets().filter(function (s) {
-      return beforeNames.indexOf(s.getName()) === -1;
-    });
-    if (created.length > 0) {
-      created[created.length - 1].setName(name);
-      return;
-    }
-  }
-  throw new Error('Could not find the new response sheet for "' + name + '" after waiting ' + maxAttempts + 's for it to appear — try running setupAll() again.');
-}
-
 function supportWhoFor_(deptProfile) {
   return SUPPORT_WHO_ALL.filter(function (name) {
     return name !== deptProfile.person;

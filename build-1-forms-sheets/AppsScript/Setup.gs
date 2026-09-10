@@ -9,10 +9,6 @@ function setupAll() {
   var ss = SpreadsheetApp.create(SS_NAME);
   var props = PropertiesService.getScriptProperties();
   props.setProperty('SS_ID', ss.getId());
-  // Give the brand-new spreadsheet a moment to fully exist from Forms'
-  // side before linking anything to it — reduces (doesn't rely on)
-  // how long renameNewResponseSheet_'s retry loop needs later.
-  Utilities.sleep(2000);
 
   seedMasterTabs_(ss);
   var dailyForm = buildDailyUpdateForm_(ss);
@@ -26,9 +22,21 @@ function setupAll() {
   installTriggers_(ss.getId());
   syncDropdowns();
 
+  // Google Forms creates each form's response sheet with a short, variable
+  // delay that isn't reliably observable within this same execution (we
+  // tried waiting — even 20+ seconds of polling isn't consistently enough).
+  // finishSetup() runs itself a minute from now, in a fresh execution that
+  // will see current state, and renames those sheets then.
+  clearFinishSetupTriggers_();
+  ScriptApp.newTrigger('finishSetup').timeBased().after(60 * 1000).create();
+
   Logger.log('Spreadsheet: ' + ss.getUrl());
   Logger.log('Daily Update form (share this link): ' + dailyForm.getPublishedUrl());
   Logger.log('Lead Generation form (share this link): ' + leadForm.getPublishedUrl());
+  Logger.log('Finishing up in the background — wait about a minute before ' +
+    'submitting a test response (check View > Executions for a "finishSetup" ' +
+    'entry to confirm). A response submitted before that finishes would still ' +
+    'save, but the Dashboard/Flags logic wouldn\'t pick it up.');
 }
 
 function seedMasterTabs_(ss) {
@@ -64,9 +72,7 @@ function seedMasterTabs_(ss) {
 function buildDailyUpdateForm_(ss) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create('Daily Update');
-  var beforeNames = ss.getSheets().map(function (s) { return s.getName(); });
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
-  renameNewResponseSheet_(ss, beforeNames, SHEET_DAILY_RESPONSES);
   form.setCollectEmail(false);
   form.setLimitOneResponsePerUser(false);
   form.setDescription('Daily status — takes under 90 seconds. Pick your name and tap through.');
@@ -180,9 +186,7 @@ function buildDailyUpdateForm_(ss) {
 function buildLeadGenForm_(ss) {
   var props = PropertiesService.getScriptProperties();
   var form = FormApp.create('Lead Generation');
-  var beforeNames = ss.getSheets().map(function (s) { return s.getName(); });
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
-  renameNewResponseSheet_(ss, beforeNames, SHEET_LEAD_RESPONSES);
   form.setCollectEmail(false);
   form.setDescription('Office staff only — new lead capture.');
 
@@ -215,4 +219,70 @@ function installTriggers_(ssId) {
   var ss = SpreadsheetApp.openById(ssId);
   ScriptApp.newTrigger('onAnyFormSubmit').forSpreadsheet(ss).onFormSubmit().create();
   ScriptApp.newTrigger('onMasterTabEdit').forSpreadsheet(ss).onEdit().create();
+}
+
+/**
+ * Renames each form's auto-created response sheet to the fixed names the
+ * rest of the code expects (SHEET_DAILY_RESPONSES / SHEET_LEAD_RESPONSES).
+ * Runs on its own ~1 minute after setupAll() via a temporary trigger — see
+ * the comment in setupAll() for why this isn't done inline. Safe to also
+ * run manually from the function dropdown if you don't want to wait, or
+ * if it needs another attempt.
+ */
+function finishSetup() {
+  var props = PropertiesService.getScriptProperties();
+  var ss = SpreadsheetApp.openById(props.getProperty('SS_ID'));
+
+  var pending = [SHEET_DAILY_RESPONSES, SHEET_LEAD_RESPONSES].filter(function (targetName) {
+    return !ss.getSheetByName(targetName);
+  });
+
+  if (pending.length === 0) {
+    finishSetupComplete_();
+    return;
+  }
+
+  var known = [SHEET_EMPLOYEES, SHEET_PROJECTS, SHEET_FLAGS, SHEET_DASHBOARD, SHEET_DAILY_RESPONSES, SHEET_LEAD_RESPONSES];
+  var unclaimed = ss.getSheets().filter(function (s) {
+    return known.indexOf(s.getName()) === -1;
+  });
+
+  if (unclaimed.length < pending.length) {
+    var attempts = Number(props.getProperty('FINISH_SETUP_ATTEMPTS') || '0') + 1;
+    props.setProperty('FINISH_SETUP_ATTEMPTS', String(attempts));
+    if (attempts >= 6) {
+      Logger.log('Still missing ' + pending.join(', ') + ' after ' + attempts +
+        ' attempts (about 6 minutes) — run finishSetup() manually to try again.');
+      clearFinishSetupTriggers_();
+      return;
+    }
+    Logger.log('Found ' + unclaimed.length + ' of ' + pending.length +
+      ' pending response sheet(s) so far — retrying in 1 minute (attempt ' + attempts + ' of 6).');
+    clearFinishSetupTriggers_();
+    ScriptApp.newTrigger('finishSetup').timeBased().after(60 * 1000).create();
+    return;
+  }
+
+  // Both forms were built in this order (Daily Update, then Lead
+  // Generation), and sheets appear in creation order, so pairing the
+  // still-unnamed sheets up positionally against `pending` is reliable
+  // here — unlike trying to do this within setupAll()'s own execution.
+  unclaimed.slice(0, pending.length).forEach(function (sheet, i) {
+    sheet.setName(pending[i]);
+  });
+
+  finishSetupComplete_();
+}
+
+function finishSetupComplete_() {
+  PropertiesService.getScriptProperties().deleteProperty('FINISH_SETUP_ATTEMPTS');
+  clearFinishSetupTriggers_();
+  syncDropdowns();
+  Logger.log('Setup finished — response sheets are named correctly and dropdowns are synced. Ready to use.');
+}
+
+function clearFinishSetupTriggers_() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'finishSetup') ScriptApp.deleteTrigger(t);
+  });
 }
