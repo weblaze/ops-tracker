@@ -63,6 +63,17 @@ reactive auto-fill.
    real `Projects`. The dropdowns sync automatically on setup and again on
    any edit to those tabs, or instantly via **Ops Tools → Sync Dropdowns
    Now**.
+8. **Wait about a minute**, then check **View → Executions** for a
+   `finishSetup` entry that ran after `setupAll` and finished without an
+   error. Google Forms creates each form's response sheet with a short,
+   variable delay that isn't reliably visible within `setupAll`'s own run
+   — `finishSetup` is scheduled to run itself a minute later and finish
+   naming things correctly once those sheets actually exist. If you submit
+   a test response before it's finished, the response still saves, but the
+   Dashboard/Flags logic won't process it. If `finishSetup` logs that it's
+   still waiting, it'll retry automatically every minute for up to 6
+   attempts — or just run `finishSetup` manually from the function
+   dropdown at any point if you don't want to wait.
 
 Re-running `setupAll()` later creates a **second, separate** spreadsheet
 and pair of forms — it's meant to run once. If you need to rebuild, delete
@@ -70,10 +81,12 @@ the old Spreadsheet/Forms from Drive first.
 
 ## Verify it end-to-end
 
-I wrote the Dashboard's formulas and conditional formatting carefully but
-couldn't execute them against live Sheets from here (no Google
-Forms/Sheets access in this environment) — please sanity-check after
-setup:
+Make sure `finishSetup` has completed (step 8 above) before testing —
+otherwise submissions won't show up in Flags/Dashboard even though they
+saved. I wrote the Dashboard's formulas and conditional formatting
+carefully but couldn't execute them against live Sheets from here (no
+Google Forms/Sheets access in this environment) — please sanity-check
+after setup:
 
 1. Submit one Daily Update through a path that trips every flag: Blocked =
    Yes → Reason = Other Dept → tag a department; Payment = Yes; Client =
