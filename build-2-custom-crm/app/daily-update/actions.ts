@@ -14,6 +14,7 @@ export async function submitDailyUpdate(_prev: DailyUpdateState, formData: FormD
   const department = str(formData, "department");
   const projectId = str(formData, "projectId");
   const projectName = str(formData, "projectName");
+  const alsoProjectNames = formData.getAll("alsoProjectNames").map(String).filter((name) => name !== projectName);
   const yesterdayStatus = str(formData, "yesterdayStatus") as "Completed" | "Partial" | "Not Started" | "";
   const todayPlan = str(formData, "todayPlan");
   const blocked = str(formData, "blocked") === "Yes";
@@ -35,6 +36,7 @@ export async function submitDailyUpdate(_prev: DailyUpdateState, formData: FormD
       department,
       projectId,
       projectName,
+      alsoProjectNames,
       yesterdayStatus,
       yesterdayDetail: yesterdayStatus === "Completed" ? null : str(formData, "yesterdayDetail") || null,
       todayPlan,

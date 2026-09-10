@@ -10,16 +10,7 @@ export const BLOCKED_REASONS = [
   "Other",
 ] as const;
 export const SUPPORT_STATUS = ["No", "Yes-Urgent", "Yes-Can wait"] as const;
-export const SUPPORT_WHO = [
-  "Prashant",
-  "Rajeev",
-  "Design",
-  "Purchase",
-  "Site",
-  "Accounts",
-  "Client",
-  "Vendor",
-] as const;
+export const SUPPORT_WHO = ["Amit", "Anil", "Rahul", "Subrat", "Client", "Vendor"] as const;
 
 // Not specified exactly in the brief — sensible defaults, easy to edit here.
 export const LEAD_SOURCES = ["Referral", "Website", "Cold Call", "Exhibition", "Social Media", "Walk-in", "Other"] as const;

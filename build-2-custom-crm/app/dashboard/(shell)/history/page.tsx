@@ -179,7 +179,14 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
                         <TableCell>{row.submitted_date}</TableCell>
                         <TableCell className="font-medium">{row.employee_name}</TableCell>
                         <TableCell>{row.department}</TableCell>
-                        <TableCell>{row.project_name}</TableCell>
+                        <TableCell>
+                          {row.project_name}
+                          {row.also_project_names.length > 0 && (
+                            <span className="block text-xs text-muted-foreground">
+                              also: {row.also_project_names.join(", ")}
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell>{row.yesterday_status}</TableCell>
                         <TableCell className="max-w-64 truncate">{row.today_plan}</TableCell>
                         <TableCell>{statusBadge(row)}</TableCell>
