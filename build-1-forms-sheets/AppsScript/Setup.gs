@@ -9,6 +9,10 @@ function setupAll() {
   var ss = SpreadsheetApp.create(SS_NAME);
   var props = PropertiesService.getScriptProperties();
   props.setProperty('SS_ID', ss.getId());
+  // Give the brand-new spreadsheet a moment to fully exist from Forms'
+  // side before linking anything to it — reduces (doesn't rely on)
+  // how long renameNewResponseSheet_'s retry loop needs later.
+  Utilities.sleep(2000);
 
   seedMasterTabs_(ss);
   var dailyForm = buildDailyUpdateForm_(ss);
